@@ -1,0 +1,200 @@
+openapi: 3.0.3
+info:
+  title: Rohlik API
+  description: API for managing orders and products
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /order:
+    post:
+      operationId: createOrder
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderCreateResponse'
+        '409':
+          description: Insufficient inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderCreateInsufficientInventoryResponse'
+  /order/{orderId}/cancel:
+    post:
+      operationId: cancelOrder
+      summary: Cancel an order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Order cancelled
+        '404':
+          description: Order not found
+  /order/{orderId}/pay:
+    post:
+      operationId: payOrder
+      summary: Pay for an order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Order paid
+        '404':
+          description: Order not found
+  /product:
+    post:
+      operationId: createProduct
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreateRequest'
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCreateResponse'
+  /product/{productId}:
+    delete:
+      operationId: deleteProductById
+      summary: Delete a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product deleted
+        '404':
+          description: Product not found
+    patch:
+      operationId: updateProduct
+      summary: Update a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+      responses:
+        '200':
+          description: Product updated
+        '404':
+          description: Product not found
+components:
+  schemas:
+    OrderCreateRequest:
+      type: object
+      properties:
+        orderItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemRequest'
+      required:
+        - orderItems
+    OrderItemRequest:
+      type: object
+      properties:
+        productId:
+          type: integer
+        quantity:
+          type: integer
+      required:
+        - productId
+        - quantity
+    OrderCreateResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+    OrderCreateInsufficientInventoryResponse:
+      type: object
+      properties:
+        orderItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemInsufficient'
+      required:
+        - orderItems
+    OrderItemInsufficient:
+      type: object
+      properties:
+        productId:
+          type: integer
+        missingQuantity:
+          type: integer
+      required:
+        - productId
+        - missingQuantity
+    ProductCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        inventory:
+          type: integer
+      required:
+        - name
+        - price
+    ProductCreateResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+    ProductUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        inventoryChange:
+          $ref: '#/components/schemas/ProductInventoryChange'
+    ProductInventoryChange:
+      type: object
+      properties:
+        quantity:
+          type: integer
+        description:
+          type: string
+      required:
+        - quantity
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
